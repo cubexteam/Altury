@@ -1,0 +1,56 @@
+package cn.nukkit.network.protocol;
+
+import cn.nukkit.network.protocol.types.inventory.creative.CreativeItemData;
+import cn.nukkit.network.protocol.types.inventory.creative.CreativeItemGroup;
+import cn.nukkit.registry.CreativeItemRegistry.CreativeItems;
+import lombok.ToString;
+
+@ToString
+public class CreativeContentPacket extends DataPacket {
+
+    public static final byte NETWORK_ID = ProtocolInfo.CREATIVE_CONTENT_PACKET;
+
+    public CreativeItems creativeItems;
+
+    @Override
+    public byte pid() {
+        return NETWORK_ID;
+    }
+
+    @Override
+    public void decode() {
+    }
+
+    @Override
+    public void encode() {
+        this.reset();
+
+        if (this.creativeItems == null) {
+            // Spectator
+            if (this.protocol >= ProtocolInfo.v1_21_60) {
+                this.putUnsignedVarInt(0); // group count
+            }
+            this.putUnsignedVarInt(0); // item count
+            return;
+        }
+
+        if (this.protocol >= ProtocolInfo.v1_21_60) {
+            this.putArray(this.creativeItems.getGroups(), this::writeGroup);
+        }
+        this.putArray(this.creativeItems.getCreativeItemData(), this::writeItem);
+    }
+
+    private void writeGroup(CreativeItemGroup group) {
+        this.putLInt(group.getCategory().ordinal());
+        this.putString(group.getName());
+        this.putSlot(this.protocol, group.getIcon(), true);
+    }
+
+    private void writeItem(CreativeItemData data) {
+        this.putUnsignedVarInt(data.getNetId());
+        this.putSlot(this.protocol, data.getItem(), true);
+        if (this.protocol >= ProtocolInfo.v1_21_60) {
+            this.putUnsignedVarInt(data.getGroupId());
+        }
+    }
+}

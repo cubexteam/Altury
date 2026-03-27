@@ -1,0 +1,35 @@
+package cn.nukkit.block;
+
+import cn.nukkit.item.Item;
+import cn.nukkit.item.ItemAcaciaSign;
+import cn.nukkit.item.ItemNamespaceId;
+
+public class BlockAcaciaSignPost extends BlockSignPost {
+
+    public BlockAcaciaSignPost() {
+    }
+
+    public BlockAcaciaSignPost(int meta) {
+        super(meta);
+    }
+
+    @Override
+    public int getId() {
+        return ACACIA_STANDING_SIGN;
+    }
+
+    @Override
+    public int getWallId() {
+        return ACACIA_WALL_SIGN;
+    }
+
+    @Override
+    public String getName() {
+        return "Acacia Sign Post";
+    }
+
+    @Override
+    public Item toItem() {
+        return Item.get(ItemNamespaceId.ACACIA_SIGN);
+    }
+}

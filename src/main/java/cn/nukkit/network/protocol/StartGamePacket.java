@@ -1,0 +1,366 @@
+package cn.nukkit.network.protocol;
+
+import cn.nukkit.Server;
+import cn.nukkit.block.Block;
+import cn.nukkit.block.customblock.CustomBlockDefinition;
+import cn.nukkit.block.customblock.serializer.CustomBlockDefinitionSerializer;
+import cn.nukkit.item.RuntimeItems;
+import cn.nukkit.level.GameRules;
+import cn.nukkit.level.GlobalBlockPalette;
+import cn.nukkit.nbt.NBTIO;
+import cn.nukkit.nbt.tag.CompoundTag;
+import cn.nukkit.network.protocol.types.ExperimentData;
+import cn.nukkit.network.protocol.types.NetworkPermissions;
+import cn.nukkit.registry.Registries;
+import cn.nukkit.utils.Binary;
+import cn.nukkit.utils.Utils;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.ToString;
+import lombok.extern.log4j.Log4j2;
+
+import java.io.IOException;
+import java.nio.ByteOrder;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+
+@Log4j2
+@ToString
+public class StartGamePacket extends DataPacket {
+
+    public static final byte NETWORK_ID = ProtocolInfo.START_GAME_PACKET;
+
+    public static final int GAME_PUBLISH_SETTING_NO_MULTI_PLAY = 0;
+    public static final int GAME_PUBLISH_SETTING_INVITE_ONLY = 1;
+    public static final int GAME_PUBLISH_SETTING_FRIENDS_ONLY = 2;
+    public static final int GAME_PUBLISH_SETTING_FRIENDS_OF_FRIENDS = 3;
+    public static final int GAME_PUBLISH_SETTING_PUBLIC = 4;
+
+    private static final byte[] EMPTY_UUID;
+
+    static {
+        EMPTY_UUID = Binary.writeUUID(new UUID(0, 0));
+    }
+
+    @Override
+    public byte pid() {
+        return NETWORK_ID;
+    }
+
+    public String version;
+
+    public long entityUniqueId;
+    public long entityRuntimeId;
+    public int playerGamemode;
+    public float x;
+    public float y;
+    public float z;
+    public float yaw;
+    public float pitch;
+    public int seed;
+    public byte dimension;
+    /**
+     * generator is the generator used for the world. It is a value from 0-4, with 0 being old limited worlds,
+     * 1 being infinite worlds, 2 being flat worlds, 3 being nether worlds and 4 being end worlds. A value of
+     * 0 will actually make the client stop rendering chunks you send beyond the world limit.
+     * <p>
+     * 防止主世界不渲染384高度，这里始终保持1
+     */
+    public int generator = 1;
+    public int worldGamemode;
+    public int difficulty;
+    public int spawnX;
+    public int spawnY;
+    public int spawnZ;
+    public boolean hasAchievementsDisabled = true;
+    public int editorWorldType;
+    public int dayCycleStopTime = -1;
+    public boolean eduMode = false;
+    public int eduEditionOffer = 0;
+    public boolean hasEduFeaturesEnabled = false;
+    public float rainLevel;
+    public float lightningLevel;
+    public boolean hasConfirmedPlatformLockedContent = false;
+    public boolean multiplayerGame = true;
+    public boolean broadcastToLAN = true;
+    public boolean broadcastToXboxLive = true;
+    public int xblBroadcastIntent = GAME_PUBLISH_SETTING_PUBLIC;
+    public int platformBroadcastIntent = GAME_PUBLISH_SETTING_PUBLIC;
+    public boolean commandsEnabled;
+    public boolean isTexturePacksRequired = false;
+    public final List<ExperimentData> experiments = new ObjectArrayList<>();
+    public GameRules gameRules;
+    public boolean bonusChest = false;
+    public boolean hasStartWithMapEnabled = false;
+    public boolean trustPlayers = false;
+    public int permissionLevel = 1;
+    public int gamePublish = 4;
+    public int serverChunkTickRange = 4;
+    public boolean broadcastToPlatform;
+    public int platformBroadcastMode = 4;
+    public boolean xblBroadcastIntentOld = true;
+    public boolean hasLockedBehaviorPack = false;
+    public boolean hasLockedResourcePack = false;
+    public boolean isFromLockedWorldTemplate = false;
+    public boolean isUsingMsaGamertagsOnly = false;
+    public boolean isFromWorldTemplate = false;
+    public boolean isWorldTemplateOptionLocked = false;
+    public boolean isOnlySpawningV1Villagers = false;
+    public String vanillaVersion = Utils.getVersionByProtocol(ProtocolInfo.CURRENT_PROTOCOL);
+    public String levelId = "";
+    public String worldName;
+    public String premiumWorldTemplateId = "";
+    public boolean isTrial = false;
+    public boolean isMovementServerAuthoritative;
+    public boolean isServerAuthoritativeBlockBreaking;
+    public long currentTick;
+    public int enchantmentSeed;
+    public Collection<CustomBlockDefinition> blockDefinitions = Registries.BLOCK.getCustomBlockDefinitionList();
+    public String multiplayerCorrelationId = "";
+    public boolean isDisablingPersonas;
+    public boolean isDisablingCustomSkins;
+    /**
+     * @since v527
+     */
+    public CompoundTag playerPropertyData = new CompoundTag("");
+    public boolean clientSideGenerationEnabled;
+    public byte chatRestrictionLevel;
+    public boolean disablePlayerInteractions;
+    /**
+     * @since v567
+     */
+    public boolean emoteChatMuted;
+    /**
+     * Whether block runtime IDs should be replaced by 32-bit integer hashes of NBT block state.
+     * Unlike runtime IDs, this hashes should be persistent across versions and should make support for data-driven/custom blocks easier.
+     *
+     * @since v582
+     */
+    public boolean blockNetworkIdsHashed;
+    /**
+     * @since v582
+     */
+    public boolean createdInEditor;
+    /**
+     * @since v582
+     */
+    public boolean exportedFromEditor;
+    /**
+     * @since v588
+     */
+    public NetworkPermissions networkPermissions = NetworkPermissions.DEFAULT;
+    /**
+     * @since v671
+     */
+    public boolean hardcore;
+    /**
+     * @since v685
+     */
+    public String serverId = "";
+    /**
+     * @since v685
+     */
+    public String worldId = "";
+    /**
+     * @since v685
+     */
+    public String scenarioId = "";
+    /**
+     * @since v818
+     */
+    public String ownerIdentifier = "";
+    /**
+     * @since v827
+     * @deprecated v897
+     */
+    @SuppressWarnings("dep-ann")
+    public boolean tickDeathSystemsEnabled;
+
+    @Override
+    public void decode() {
+    }
+
+    @Override
+    public void encode() {
+        this.reset();
+        this.putEntityUniqueId(this.entityUniqueId);
+        this.putEntityRuntimeId(this.entityRuntimeId);
+        this.putVarInt(this.playerGamemode);
+        this.putVector3f(this.x, this.y, this.z);
+        this.putLFloat(this.yaw);
+        this.putLFloat(this.pitch);
+
+        /* Level settings start */
+        this.putLLong(this.seed);
+        if (protocol >= 407) {
+            this.putLShort(0x00); // SpawnBiomeType - Default
+            this.putString("plains"); // UserDefinedBiomeName
+        }
+        this.putVarInt(this.dimension);
+        this.putVarInt(this.generator);
+        this.putVarInt(this.worldGamemode);
+        if (this.protocol >= ProtocolInfo.v1_20_80) {
+            this.putBoolean(this.hardcore);
+        }
+        this.putVarInt(this.difficulty);
+        this.putBlockVector3(this.spawnX, this.spawnY, this.spawnZ);
+        this.putBoolean(this.hasAchievementsDisabled);
+        this.putVarInt(this.editorWorldType);
+        this.putBoolean(this.createdInEditor);
+        this.putBoolean(this.exportedFromEditor);
+        this.putVarInt(this.dayCycleStopTime);
+        if (protocol >= 388) {
+            this.putVarInt(this.eduEditionOffer);
+        } else {
+            this.putBoolean(this.eduMode);
+        }
+        if (protocol > 224) {
+            this.putBoolean(this.hasEduFeaturesEnabled);
+            if (protocol >= 407) {
+                this.putString(""); // Education Edition Product ID
+            }
+        }
+        this.putLFloat(this.rainLevel);
+        this.putLFloat(this.lightningLevel);
+        if (protocol >= 332) {
+            this.putBoolean(this.hasConfirmedPlatformLockedContent);
+        }
+        this.putBoolean(this.multiplayerGame);
+        this.putBoolean(this.broadcastToLAN);
+        if (protocol >= 332) {
+            this.putVarInt(this.xblBroadcastIntent);
+            this.putVarInt(this.platformBroadcastIntent);
+        } else {
+            this.putBoolean(this.broadcastToXboxLive);
+        }
+        this.putBoolean(this.commandsEnabled);
+        this.putBoolean(this.isTexturePacksRequired);
+        this.putGameRules(protocol, gameRules, true);
+        if (Server.getInstance().getSettings().features().enableExperimentMode() && !this.experiments.isEmpty()) {
+            this.putLInt(this.experiments.size()); // Experiment count
+            for (ExperimentData experiment : this.experiments) {
+                this.putString(experiment.getName());
+                this.putBoolean(experiment.isEnabled());
+            }
+            this.putBoolean(true); // Were experiments previously toggled
+        } else {
+            this.putLInt(0); // Experiment count
+            this.putBoolean(false); // Were experiments previously toggled
+        }
+        this.putBoolean(this.bonusChest);
+        if (protocol > 201) {
+            this.putBoolean(this.hasStartWithMapEnabled);
+        }
+        if (protocol < 332) {
+            this.putBoolean(this.trustPlayers);
+        }
+        this.putVarInt(this.permissionLevel);
+        if (protocol < 332) {
+            this.putVarInt(this.gamePublish);
+        }
+        if (protocol >= 201) {
+            this.putLInt(this.serverChunkTickRange);
+        }
+        if (protocol >= 223 && protocol < 332) {
+            this.putBoolean(this.broadcastToPlatform);
+            this.putVarInt(this.platformBroadcastMode);
+            this.putBoolean(this.xblBroadcastIntentOld);
+        }
+        if (protocol > 224) {
+            this.putBoolean(this.hasLockedBehaviorPack);
+            this.putBoolean(this.hasLockedResourcePack);
+            this.putBoolean(this.isFromLockedWorldTemplate);
+        }
+        if (protocol >= 291) {
+            this.putBoolean(this.isUsingMsaGamertagsOnly);
+            if (protocol >= 313) {
+                this.putBoolean(this.isFromWorldTemplate);
+                this.putBoolean(this.isWorldTemplateOptionLocked);
+                if (protocol >= 361) {
+                    this.putBoolean(this.isOnlySpawningV1Villagers);
+                    this.putBoolean(this.isDisablingPersonas);
+                    this.putBoolean(this.isDisablingCustomSkins);
+                    this.putBoolean(this.emoteChatMuted);
+                    this.putString(this.vanillaVersion);
+                }
+            }
+            this.putLInt(16); // Limited world width
+            this.putLInt(16); // Limited world height
+            this.putBoolean(false); // Nether type
+            this.putString(""); // buttonName
+            this.putString(""); // linkUri
+            this.putBoolean(/*Server.getInstance().enableExperimentMode*/ false); //Force Experimental Gameplay (exclusive to debug clients)
+            this.putByte(this.chatRestrictionLevel);
+            this.putBoolean(this.disablePlayerInteractions);
+            if (protocol >= ProtocolInfo.v1_21_0 && protocol < ProtocolInfo.v1_26_0) {
+                this.putString(this.serverId);
+                this.putString(this.worldId);
+                this.putString(this.scenarioId);
+                if (protocol >= ProtocolInfo.v1_21_90) {
+                    this.putString(this.ownerIdentifier); // OwnerId
+                }
+            }
+        }
+        /* Level settings end */
+
+        this.putString(this.levelId);
+        this.putString(this.worldName);
+        this.putString(this.premiumWorldTemplateId);
+        this.putBoolean(this.isTrial);
+        if (protocol < ProtocolInfo.v1_21_90) {
+            this.putVarInt(this.isMovementServerAuthoritative ? 1 : 0); // 2 - rewind
+        }
+        this.putVarInt(0); // RewindHistorySize
+        this.putBoolean(this.isServerAuthoritativeBlockBreaking); // isServerAuthoritativeBlockBreaking
+        this.putLLong(this.currentTick);
+        this.putVarInt(this.enchantmentSeed);
+        if (this.blockDefinitions != null && !this.blockDefinitions.isEmpty()) {
+            this.putUnsignedVarInt(this.blockDefinitions.size());
+            for (CustomBlockDefinition definition : this.blockDefinitions) {
+                this.putString(definition.identifier());
+                try {
+                    this.put(NBTIO.write(CustomBlockDefinitionSerializer.serialize(definition.nbt(), protocol), ByteOrder.LITTLE_ENDIAN, true));
+                } catch (Exception e) {
+                    log.error("Error while encoding NBT data of CustomBlockDefinition", e);
+                }
+            }
+        } else {
+            this.putUnsignedVarInt(0); // No custom blocks
+        }
+        if (protocol < ProtocolInfo.v1_21_60) {
+            this.put(RuntimeItems.getMapping(protocol).getItemPalette());
+        }
+        this.putString(this.multiplayerCorrelationId);
+        this.putBoolean(false); // isInventoryServerAuthoritative
+        this.putString(""); // serverEngine
+        try {
+            this.put(NBTIO.writeNetwork(this.playerPropertyData));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        this.putLLong(0L); // BlockRegistryChecksum
+        this.put(EMPTY_UUID); // worldTemplateId
+        this.putBoolean(this.clientSideGenerationEnabled);
+        this.putBoolean(this.blockNetworkIdsHashed);
+        if (protocol >= ProtocolInfo.v1_20_0_23) {
+            if(protocol >= ProtocolInfo.v1_21_100 && protocol < ProtocolInfo.v1_21_130) {
+                this.putBoolean(this.tickDeathSystemsEnabled);
+            }
+            this.putBoolean(this.networkPermissions.isServerAuthSounds());
+            if (protocol >= ProtocolInfo.v1_26_0) {
+                // v924: Server telemetry data
+                this.putBoolean(false); // containServerJoinInformation
+                this.putString(this.serverId); // serverIdentifier
+                this.putString(this.scenarioId); // scenarioIdentifier
+                this.putString(this.worldId); // worldIdentifier
+                this.putString(this.ownerIdentifier); // ownerIdentifier
+            }
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private static class ItemData {
+        private String name;
+        private int id;
+    }
+}

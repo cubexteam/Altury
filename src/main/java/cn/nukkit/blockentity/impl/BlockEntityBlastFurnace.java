@@ -1,0 +1,52 @@
+package cn.nukkit.blockentity.impl;
+
+import cn.nukkit.block.Block;
+import cn.nukkit.blockentity.BlockEntity;
+import cn.nukkit.inventory.InventoryType;
+import cn.nukkit.recipe.SmeltingRecipe;
+import cn.nukkit.item.Item;
+import cn.nukkit.level.format.FullChunk;
+import cn.nukkit.nbt.tag.CompoundTag;
+import cn.nukkit.registry.Registries;
+
+public class BlockEntityBlastFurnace extends BlockEntityFurnace {
+
+    public BlockEntityBlastFurnace(FullChunk chunk, CompoundTag nbt) {
+        super(chunk, nbt);
+    }
+
+    @Override
+    protected InventoryType getInventoryType() {
+        return InventoryType.BLAST_FURNACE;
+    }
+
+    @Override
+    protected String getFurnaceName() {
+        return "Blast Furnace";
+    }
+
+    @Override
+    protected String getClientName() {
+        return BlockEntity.BLAST_FURNACE;
+    }
+
+    @Override
+    protected int getIdleBlockId() {
+        return Block.BLAST_FURNACE;
+    }
+
+    @Override
+    protected int getBurningBlockId() {
+        return Block.LIT_BLAST_FURNACE;
+    }
+
+    @Override
+    protected SmeltingRecipe matchRecipe(int protocol, Item raw) {
+        return Registries.RECIPE.matchBlastFurnaceRecipe(raw);
+    }
+
+    @Override
+    protected int getSpeedMultiplier() {
+        return 2;
+    }
+}

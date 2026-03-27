@@ -1,0 +1,100 @@
+package cn.nukkit.block;
+
+import cn.nukkit.Player;
+import cn.nukkit.blockentity.BlockEntity;
+import cn.nukkit.blockentity.impl.BlockEntityFurnace;
+import cn.nukkit.blockentity.impl.BlockEntitySmoker;
+import cn.nukkit.item.Item;
+import cn.nukkit.item.ItemBlock;
+import cn.nukkit.math.BlockFace;
+import cn.nukkit.nbt.tag.CompoundTag;
+import cn.nukkit.nbt.tag.ListTag;
+import cn.nukkit.nbt.tag.StringTag;
+import cn.nukkit.nbt.tag.Tag;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
+
+public class BlockSmokerLit extends BlockFurnaceBurning {
+
+    public BlockSmokerLit() {
+        this(0);
+    }
+
+    public BlockSmokerLit(int meta) {
+        super(meta);
+    }
+
+    @Override
+    public int getId() {
+        return LIT_SMOKER;
+    }
+
+    @Override
+    public String getName() {
+        return "Lit Smoker";
+    }
+
+    @Override
+    public Item toItem() {
+        return new ItemBlock(Block.get(SMOKER));
+    }
+
+    @Override
+    public boolean place(Item item, Block block, Block target, BlockFace face, double fx, double fy, double fz, Player player) {
+        this.setBlockFace(player != null ? player.getDirection() : BlockFace.SOUTH);
+        this.getLevel().setBlock(block, this, true, true);
+        CompoundTag nbt = new CompoundTag()
+                .putList(new ListTag<>("Items"))
+                .putString("id", BlockEntity.SMOKER)
+                .putInt("x", (int) this.x)
+                .putInt("y", (int) this.y)
+                .putInt("z", (int) this.z);
+
+        if (item.hasCustomName()) {
+            nbt.putString("CustomName", item.getCustomName());
+        }
+
+        if (item.hasCustomBlockData()) {
+            Map<String, Tag> customData = item.getCustomBlockData().getTags();
+            for (Map.Entry<String, Tag> tag : customData.entrySet()) {
+                nbt.put(tag.getKey(), tag.getValue());
+            }
+        }
+
+        BlockEntitySmoker smoker = (BlockEntitySmoker) BlockEntity.createBlockEntity(BlockEntity.SMOKER, this.getChunk(), nbt);
+        return smoker != null;
+    }
+
+    @NotNull
+    @Override
+    public Class<? extends BlockEntityFurnace> getBlockEntityClass() {
+        return BlockEntitySmoker.class;
+    }
+
+    @NotNull
+    @Override
+    public String getBlockEntityType() {
+        return BlockEntity.SMOKER;
+    }
+
+    @Override
+    public boolean onActivate(Item item, Player player) {
+        if (player != null) {
+            BlockEntity t = this.getBlockEntity();
+            if (!(t instanceof BlockEntitySmoker smoker)) { 
+                return false;
+            }
+
+            if (smoker.namedTag.contains("Lock") && smoker.namedTag.get("Lock") instanceof StringTag) {
+                if (!smoker.namedTag.getString("Lock").equals(item.getCustomName())) {
+                    return true;
+                }
+            }
+
+            player.addWindow(smoker.getInventory());
+        }
+
+        return true;
+    }
+}
