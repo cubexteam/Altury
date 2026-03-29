@@ -163,8 +163,9 @@ public class Server {
     private final UUID serverID;
     private final ServerSettings settings;
 
-    private final Map<InetSocketAddress, Player> players = new HashMap<>();
-    final Map<UUID, Player> playerList = new HashMap<>();
+    // code by SantianDev
+    private final Map<InetSocketAddress, Player> players = new ConcurrentHashMap<>();
+    final Map<UUID, Player> playerList = new ConcurrentHashMap<>();
 
     private static final Pattern uuidPattern = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}.dat$");
 
@@ -677,7 +678,7 @@ public class Server {
             }
 
             this.getLogger().debug("Disconnecting all players...");
-            for (Player player : new ArrayList<>(this.players.values())) {
+            for (Player player : this.players.values()) {
                 player.close(player.getLeaveMessage(), reason);
             }
 
@@ -920,7 +921,7 @@ public class Server {
 
     private void checkTickUpdates(int currentTick) {
         if (this.settings.performance().alwaysTickPlayers()) {
-            for (Player p : new ArrayList<>(this.players.values())) {
+            for (Player p : this.players.values()) {
                 p.onUpdate(currentTick);
             }
         }
@@ -1021,7 +1022,7 @@ public class Server {
 
         this.checkTickUpdates(this.tickCounter);
 
-        for (Player player : new ArrayList<>(this.players.values())) {
+        for (Player player : this.players.values()) {
             player.checkNetwork();
         }
 
@@ -1623,7 +1624,7 @@ public class Server {
             return;
         }
 
-        for (InetSocketAddress socketAddress : new ArrayList<>(this.players.keySet())) {
+        for (InetSocketAddress socketAddress : this.players.keySet()) {
             if (player == this.players.get(socketAddress)) {
                 this.players.remove(socketAddress);
                 break;
