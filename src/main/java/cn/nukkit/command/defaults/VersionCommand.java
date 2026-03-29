@@ -44,11 +44,11 @@ public class VersionCommand extends VanillaCommand {
             final String branch = Nukkit.getBranch();
             String minVer = Utils.getVersionByProtocol(ProtocolInfo.SUPPORTED_PROTOCOLS.get(0));
 
-            sender.sendMessage("§dLumi§3 v" + Nukkit.API_VERSION + "\n§6Build: §b" + branch + '/' + Nukkit.VERSION.substring(4) + "\n§6Multiversion: §b" + minVer + "-" + ProtocolInfo.MINECRAFT_VERSION_NETWORK);
+            sender.sendMessage("§dAltury§3 v" + Nukkit.API_VERSION + "\n§6Build: §b" + branch + '/' + Nukkit.VERSION.substring(4) + "\n§6Multiversion: §b" + minVer + "-" + ProtocolInfo.MINECRAFT_VERSION_NETWORK);
 
             if (sender.isOp()) {
-                if (!branch.equals("master") || Nukkit.VERSION.equals("git-null")) {
-                    sender.sendMessage("§c[Lumi] §aYou are using a development build, consider updating");
+                if (!branch.equals("main") || Nukkit.VERSION.equals("git-null")) {
+                    sender.sendMessage("§c[Altury] §aYou are using a development build, consider updating");
                     return true;
                 }
             }
