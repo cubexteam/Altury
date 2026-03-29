@@ -1624,7 +1624,7 @@ public class Server {
             return;
         }
 
-        for (InetSocketAddress socketAddress : this.players.keySet()) {
+        for (InetSocketAddress socketAddress : new ArrayList<>(this.players.keySet())) {
             if (player == this.players.get(socketAddress)) {
                 this.players.remove(socketAddress);
                 break;
