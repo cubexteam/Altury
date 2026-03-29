@@ -90,7 +90,7 @@ abstract public class PluginBase implements Plugin {
     public final void setEnabled(boolean value) {
         if (isEnabled != value) {
             if (!value && InternalPlugin.INSTANCE == this) {
-                throw new UnsupportedOperationException("The Lumi Internal Plugin cannot be disabled");
+                throw new UnsupportedOperationException("The Altury Internal Plugin cannot be disabled");
             }
             isEnabled = value;
             if (isEnabled) {
