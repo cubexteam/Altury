@@ -1,7 +1,7 @@
 <h1 align="center">⚡ Altury</h1>
 <p align="center">Мощное серверное ядро для Minecraft Bedrock Edition</p>
 <p align="center">
-  <img src="https://img.shields.io/badge/Minecraft-1.20--1.26-brightgreen" alt="Minecraft versions"/>
+  <img src="https://img.shields.io/badge/Minecraft-1.20--1.26.10-brightgreen" alt="Minecraft versions"/>
   <img src="https://img.shields.io/badge/Java-21+-orange" alt="Java 21+"/>
   <img src="https://img.shields.io/badge/Platform-Bedrock-blue" alt="Bedrock"/>
 </p>
